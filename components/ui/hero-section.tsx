@@ -1,6 +1,3 @@
-"use client";
-
-import { motion } from "framer-motion";
 import Image from "next/image";
 import { Youtube, Instagram, Facebook, Twitter, AtSign } from "lucide-react";
 
@@ -25,39 +22,19 @@ export default function HeroSection() {
             {"Sai Nithin Tech - Simplifying Tech Across Platforms"
               .split(" ")
               .map((word, index) => (
-                <motion.span
-                  key={index}
-                  initial={{ opacity: 0, filter: "blur(4px)", y: 10 }}
-                  animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                  transition={{
-                    duration: 0.3,
-                    delay: index * 0.1,
-                    ease: "easeInOut",
-                  }}
-                  className="mr-2 inline-block"
-                >
+                <span key={index} className="mr-2 inline-block">
                   {word}
-                </motion.span>
+                </span>
               ))}
           </h1>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.8 }}
-            className="relative z-10 mt-6 text-base sm:text-lg text-neutral-600 dark:text-neutral-400"
-          >
+          <p className="relative z-10 mt-6 text-base sm:text-lg text-neutral-600 dark:text-neutral-400">
             From tech news to gadget reviews and one-minute shorts - join me as
             I make technology easy, fun, and accessible for every Telugu
             speaker.
-          </motion.p>
+          </p>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 1 }}
-            className="relative z-10 mt-8 flex flex-wrap items-center justify-center md:justify-start gap-4"
-          >
+          <div className="relative z-10 mt-8 flex flex-wrap items-center justify-center md:justify-start gap-4">
             <a
               href="https://www.youtube.com/@sainithintech"
               target="_blank"
@@ -123,16 +100,11 @@ export default function HeroSection() {
                 Threads
               </span>
             </a>
-          </motion.div>
+          </div>
         </div>
 
         {/* Image */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="relative z-10 w-48 sm:w-64 md:w-96 aspect-square rounded-full overflow-hidden border-4 border-neutral-200 dark:border-neutral-800"
-        >
+        <div className="relative z-10 w-48 sm:w-64 md:w-96 aspect-square rounded-full overflow-hidden border-4 border-neutral-200 dark:border-neutral-800">
           <Image
             src="/profile.jpg"
             alt="Profile"
@@ -140,7 +112,7 @@ export default function HeroSection() {
             className="object-cover"
             priority
           />
-        </motion.div>
+        </div>
       </div>
     </div>
   );

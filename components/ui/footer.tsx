@@ -1,5 +1,3 @@
-"use client";
-
 import { Youtube, Instagram, Facebook, Twitter, AtSign } from "lucide-react";
 import Link from "next/link";
 

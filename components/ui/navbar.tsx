@@ -48,6 +48,13 @@ export default function Navbar({ className }: { className?: string }) {
             What I Do
           </a>
           <a
+            href="#viral-videos"
+            onClick={(e) => handleScroll(e, "viral-videos")}
+            className="text-sm text-neutral-700 dark:text-neutral-200 hover:text-black dark:hover:text-white transition-colors"
+          >
+            Viral Videos
+          </a>
+          <a
             href="#timeline"
             onClick={(e) => handleScroll(e, "timeline")}
             className="text-sm text-neutral-700 dark:text-neutral-200 hover:text-black dark:hover:text-white transition-colors"
@@ -111,6 +118,13 @@ export default function Navbar({ className }: { className?: string }) {
               className="block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800"
             >
               What I Do
+            </a>
+            <a
+              href="#viral-videos"
+              onClick={(e) => handleScroll(e, "viral-videos")}
+              className="block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            >
+              Viral Videos
             </a>
             <a
               href="#timeline"
