@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { Moon, Sun, Menu as MenuIcon, X } from "lucide-react";
@@ -26,7 +27,7 @@ export default function Navbar({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "fixed top-4 inset-x-0 max-w-2xl mx-auto z-50 px-4",
+        "fixed top-4 inset-x-0 max-w-3xl mx-auto z-50 px-4",
         className
       )}
     >
@@ -68,6 +69,12 @@ export default function Navbar({ className }: { className?: string }) {
           >
             Courses
           </a>
+          <Link
+            href="/products"
+            className="text-sm bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
+          >
+            Products
+          </Link>
           <a
             href="#contact"
             onClick={(e) => handleScroll(e, "contact")}
@@ -140,6 +147,13 @@ export default function Navbar({ className }: { className?: string }) {
             >
               Courses
             </a>
+            <Link
+              href="/products"
+              className="block px-4 py-2 text-sm bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Products
+            </Link>
             <a
               href="#contact"
               onClick={(e) => handleScroll(e, "contact")}

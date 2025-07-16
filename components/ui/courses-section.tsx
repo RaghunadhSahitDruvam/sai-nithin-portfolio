@@ -42,12 +42,17 @@ export default function CoursesSection() {
           <div className="grid md:grid-cols-2 gap-6 p-4 sm:p-8 pt-16 sm:pt-20">
             {/* Course Image */}
             <div className="relative h-[200px] sm:h-[300px] md:h-[400px] rounded-2xl overflow-hidden">
-              <Image
-                src="/images/instagram-course.png"
-                alt="Instagram Course"
-                fill
-                className="object-cover"
-              />
+              <a
+                href="https://www.reachdigitalacademy.com/courses/Course-1-6836d47076aebc496ca0def4?page=checkout&rzpCashfreeRedirectToPreCheckoutFlow=true&reqparams=pid%3Dp1&newCheckoutFlowParams=%2Ft%2Fpublic%2Fpre-checkout%2Fsingle-checkout%3FcourseId%3D6836d47076aebc496ca0def4%26pid%3Dp1%26orderId%3DaldKP175263354503281%26courseAmount%3D489.0%26pg%3Dcashfree%26currencyCode%3DINR%26transactionId%3D687710c9fa53163cb955dbc7"
+                target="_blank"
+              >
+                <Image
+                  src="/images/instagram-course.png"
+                  alt="Instagram Course"
+                  fill
+                  className="object-cover"
+                />
+              </a>
             </div>
 
             {/* Course Content */}

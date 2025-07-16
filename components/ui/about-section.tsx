@@ -6,7 +6,7 @@ import { Youtube, Instagram, Users } from "lucide-react";
 
 export default function AboutSection() {
   return (
-    <section className="py-20 bg-dot-pattern relative">
+    <section className="md:py-20 bg-dot-pattern relative">
       {/* Background decoration */}
       <div className="absolute pointer-events-none inset-0 flex items-center justify-center bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-900/70 via-transparent to-transparent dark:from-black/50"></div>
 

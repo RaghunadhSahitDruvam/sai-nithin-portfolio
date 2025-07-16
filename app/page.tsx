@@ -126,7 +126,7 @@ export default function Home() {
           <HeroSection />
         </div>
 
-        <div id="what-i-do" className="pt-24">
+        <div id="what-i-do" className="md:pt-24">
           <WhatIDoSection />
         </div>
 
@@ -134,17 +134,17 @@ export default function Home() {
           <ViralVideosSection />
         </div>
 
-        <div id="timeline" className="pt-24">
+        <div id="timeline" className="md:pt-24">
           <TimelineDemo />
         </div>
 
-        <div id="courses" className="pt-24">
+        <div id="courses" className="md:pt-24">
           <CoursesSection />
         </div>
 
         <div
           id="contact"
-          className="pt-24 min-h-screen py-12 bg-gradient-to-b from-white to-gray-100 dark:from-gray-900 dark:to-black"
+          className="md:pt-24 min-h-screen py-12 bg-gradient-to-b from-white to-gray-100 dark:from-gray-900 dark:to-black"
         >
           <div className="max-w-4xl mx-auto px-4">
             <div className="text-center mb-12">
