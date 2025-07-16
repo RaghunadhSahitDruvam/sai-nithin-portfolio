@@ -174,7 +174,7 @@ export default function ProductsPage() {
                     </div>
                   </div>
                   <CardContent className="p-6">
-                    <h3 className="font-semibold text-xl text-white mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-300">
+                    <h3 className="font-semibold text-xl text-blue-500 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-300">
                       {product.title}
                     </h3>
                     <p className="text-sm text-gray-600 truncate mb-4">
