@@ -33,7 +33,8 @@ export const metadata: Metadata = {
     "Hyderabad YouTuber",
     "Telugu content creator",
     "Tech influencer",
-    "Digital education"
+    "Digital education",
+    "sainithintech"
   ],
   authors: [{ name: "Sai Nithin K", url: "https://sainithintech.com" }],
   creator: "Sai Nithin K",
@@ -83,6 +84,11 @@ export const metadata: Metadata = {
   },
   verification: {
     google: "your-google-verification-code",
+  },
+  icons: {
+    icon: '/profile.svg',
+    shortcut: '/profile.svg',
+    apple: '/profile.svg',
   },
 };
 
@@ -163,6 +169,9 @@ export default function RootLayout({
           }}
         />
         <link rel="canonical" href="https://sainithintech.com" />
+        <link rel="icon" href="/profile.svg" type="image/svg+xml" />
+        <link rel="shortcut icon" href="/profile.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/profile.svg" />
         <meta name="google-site-verification" content="your-google-verification-code" />
         <meta name="msvalidate.01" content="your-bing-verification-code" />
         <meta name="yandex-verification" content="your-yandex-verification-code" />
