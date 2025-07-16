@@ -22,7 +22,10 @@ export default function HeroSection() {
             {"Sai Nithin Tech - Simplifying Tech Across Platforms"
               .split(" ")
               .map((word, index) => (
-                <span key={index} className="mr-2 inline-block">
+                <span
+                  key={index}
+                  className="mr-2 inline-block"
+                >
                   {word}
                 </span>
               ))}
