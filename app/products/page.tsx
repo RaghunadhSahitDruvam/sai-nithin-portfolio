@@ -59,7 +59,7 @@ export default function ProductsPage() {
         sortOrder,
       });
 
-      const response = await fetch(`/api/admin/products?${params}`);
+      const response = await fetch(`/api/products?${params}`);
       if (response.ok) {
         const data: ProductsResponse = await response.json();
         setProducts(data.products);
