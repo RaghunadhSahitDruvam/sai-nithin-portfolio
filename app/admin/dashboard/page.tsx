@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -11,6 +11,8 @@ import {
   Package,
   Calendar,
   ExternalLink,
+  LogOut,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -116,12 +118,37 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Product Management
-          </h1>
-          <p className="text-muted-foreground">
-            Manage your products, add new items, and track your inventory.
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">
+                Product Management
+              </h1>
+              <p className="text-muted-foreground">
+                Manage your products, add new items, and track your inventory.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/admin/account-settings">
+                <Button variant="outline" size="sm">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Account Settings
+                </Button>
+              </Link>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  if (confirm("Are you sure you want to logout?")) {
+                    signOut({ callbackUrl: "/admin/auth" });
+                  }
+                }}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Stats Cards */}

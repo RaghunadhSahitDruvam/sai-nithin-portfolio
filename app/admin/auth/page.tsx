@@ -33,6 +33,7 @@ export default function AdminAuth() {
     password: "",
     verificationCode: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function AdminAuth() {
       console.error("Error checking admin:", error);
       toast.error("Failed to check admin status");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -58,15 +59,17 @@ export default function AdminAuth() {
     setSuccess("");
 
     try {
-      const result = await signupAdmin(
-          formData.email,
-          formData.password
-        );
+      const result = await signupAdmin(formData.email, formData.password);
 
       if (result.success) {
-        setSuccess(result.message || "Admin account created! Please check your email for verification code.");
+        setSuccess(
+          result.message ||
+            "Admin account created! Please check your email for verification code."
+        );
         setStep("verification");
-        toast.success("Admin account created! Please check your email for verification code.");
+        toast.success(
+          "Admin account created! Please check your email for verification code."
+        );
       } else {
         setError(result.error || "Signup failed");
         toast.error(result.error || "Signup failed");
@@ -87,9 +90,9 @@ export default function AdminAuth() {
 
     try {
       const result = await sendVerificationCode(
-          formData.email,
-          formData.password
-        );
+        formData.email,
+        formData.password
+      );
 
       if (result.success) {
         setSuccess(result.message || "Verification code sent!");
@@ -191,16 +194,30 @@ export default function AdminAuth() {
               </div>
               <div>
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  required
-                  placeholder="Enter password"
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
+                    required
+                    placeholder="Enter password"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (

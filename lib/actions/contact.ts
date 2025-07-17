@@ -32,7 +32,7 @@ export async function submitContactForm(data: {
     // Email to admin
     const adminMailOptions = {
       from: process.env.EMAIL_USER,
-      to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
+      to: validatedData.email,
       subject: `New Contact Form Submission from ${validatedData.name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

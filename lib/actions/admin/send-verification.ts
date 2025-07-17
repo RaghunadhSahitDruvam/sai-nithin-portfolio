@@ -12,9 +12,6 @@ export async function sendVerificationCode(email: string, password: string) {
     }
 
     // Check if email matches admin email from env
-    if (email !== process.env.ADMIN_EMAIL) {
-      return { success: false, error: "Invalid credentials" };
-    }
 
     // Find admin
     const admin = await prisma.admin.findUnique({

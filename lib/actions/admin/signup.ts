@@ -11,11 +11,6 @@ export async function signupAdmin(email: string, password: string) {
       return { success: false, error: "Email and password are required" };
     }
 
-    // Check if email matches admin email from env
-    if (email !== process.env.ADMIN_EMAIL) {
-      return { success: false, error: "Invalid credentials" };
-    }
-
     // Check if admin already exists
     const existingAdmin = await prisma.admin.findUnique({
       where: { email },
@@ -49,7 +44,8 @@ export async function signupAdmin(email: string, password: string) {
 
     return {
       success: true,
-      message: "Admin created successfully. Please check your email for verification code.",
+      message:
+        "Admin created successfully. Please check your email for verification code.",
     };
   } catch (error) {
     console.error("Signup error:", error);

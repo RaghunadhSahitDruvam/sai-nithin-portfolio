@@ -20,9 +20,6 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Check if email matches admin email from env
-        if (credentials.email !== process.env.ADMIN_EMAIL) {
-          throw new Error("Invalid credentials");
-        }
 
         // Find admin in database
         const admin = await prisma.admin.findUnique({
@@ -81,16 +78,24 @@ export const authOptions: NextAuthOptions = {
     signIn: "/admin/auth",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.role = "admin";
+        token.email = user.email;
       }
+      
+      // Handle session update trigger (when update() is called)
+      if (trigger === "update" && session?.email) {
+        token.email = session.email;
+      }
+      
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.sub!;
         session.user.role = token.role as string;
+        session.user.email = token.email as string;
       }
       return session;
     },
