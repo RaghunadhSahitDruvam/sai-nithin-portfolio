@@ -6,9 +6,8 @@ interface TimelineEntry {
 }
 
 export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
-
   return (
-    <div className="w-full bg-white dark:bg-neutral-950 font-sans md:px-10">
+    <div className="pt-10 w-full bg-white dark:bg-neutral-950 font-sans md:px-10">
       <div className="max-w-7xl mx-auto py-0 px-4 md:px-8 lg:px-10 text-center">
         <h1 className="relative z-10 text-2xl md:text-7xl  bg-clip-text text-transparent bg-gradient-to-b from-neutral-200 to-neutral-600  text-center font-sans font-bold">
           My Journey
