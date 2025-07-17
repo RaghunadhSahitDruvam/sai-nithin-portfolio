@@ -15,6 +15,7 @@ import { Loader2, Search, Package, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
+import { getProducts } from "@/lib/actions/products";
 
 interface Product {
   id: string;
@@ -51,22 +52,21 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: itemsPerPage.toString(),
-        search: searchTerm,
+      const result = await getProducts(
+        currentPage,
+        itemsPerPage,
+        searchTerm,
         sortBy,
-        sortOrder,
-      });
+        sortOrder
+      );
 
-      const response = await fetch(`/api/products?${params}`);
-      if (response.ok) {
-        const data: ProductsResponse = await response.json();
-        setProducts(data.products);
-        setTotal(data.total);
-        setTotalPages(data.totalPages);
+      if (result.success) {
+        setProducts(result.products);
+        setTotal(result.total);
+        setTotalPages(result.totalPages);
       } else {
-        toast.error("Failed to fetch products");
+        console.error("Failed to fetch products:", result.error);
+        toast.error(result.error || "Failed to fetch products");
       }
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -89,17 +89,22 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
+      <div className="text-center py-8 sm:py-12">
+        <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2 sm:mb-4">
+          Products
+        </h1>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12">
         {/* Filters */}
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+        <Card className="mb-6 sm:mb-8">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     placeholder="Search products..."
                     value={searchTerm}
@@ -129,16 +134,16 @@ export default function ProductsPage() {
         {/* Products Grid */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : products.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <Package className="h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <Package className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 {searchTerm ? "No products found" : "No products available"}
               </h3>
-              <p className="text-gray-600 text-center mb-6">
+              <p className="text-muted-foreground text-center mb-6">
                 {searchTerm
                   ? "Try adjusting your search terms"
                   : "Check back later for new products"}
@@ -147,7 +152,7 @@ export default function ProductsPage() {
           </Card>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
               {products.map((product) => (
                 <Card
                   key={product.id}
@@ -165,7 +170,7 @@ export default function ProductsPage() {
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <Button
                           size="sm"
-                          className="bg-white text-black hover:bg-gray-100"
+                          className="bg-background text-foreground hover:bg-muted"
                         >
                           <ExternalLink className="h-4 w-4 mr-2" />
                           View Product
@@ -173,18 +178,18 @@ export default function ProductsPage() {
                       </div>
                     </div>
                   </div>
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold text-xl text-blue-500 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-300">
+                  <CardContent className="p-4 sm:p-6">
+                    <h3 className="font-semibold text-xl text-primary mb-2 line-clamp-2 group-hover:text-primary/80 transition-colors duration-300">
                       {product.title}
                     </h3>
-                    <p className="text-sm text-gray-600 truncate mb-4">
+                    <p className="text-sm text-muted-foreground truncate mb-4">
                       {new URL(product.link).hostname}
                     </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         {new Date(product.createdAt).toLocaleDateString()}
                       </span>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition-colors duration-300" />
+                      <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
                     </div>
                   </CardContent>
                 </Card>
@@ -214,7 +219,7 @@ export default function ProductsPage() {
                         onClick={() => setCurrentPage(pageNum)}
                         className={
                           currentPage === pageNum
-                            ? "bg-blue-600 hover:bg-blue-700"
+                            ? "bg-primary hover:bg-primary/90 text-primary-foreground"
                             : ""
                         }
                       >
@@ -233,7 +238,7 @@ export default function ProductsPage() {
                         onClick={() => setCurrentPage(totalPages)}
                         className={
                           currentPage === totalPages
-                            ? "bg-blue-600 hover:bg-blue-700"
+                            ? "bg-primary hover:bg-primary/90 text-primary-foreground"
                             : ""
                         }
                       >
@@ -257,7 +262,7 @@ export default function ProductsPage() {
         )}
 
         {/* Back to Home */}
-        <div className="text-center mt-12">
+        <div className="text-center mt-8 sm:mt-12">
           <Link href="/">
             <Button variant="outline" size="lg">
               ← Back to Home

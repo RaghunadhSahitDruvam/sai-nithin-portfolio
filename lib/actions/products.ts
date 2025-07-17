@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+"use server";
+
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { deleteFromCloudinary, extractPublicId } from "@/lib/cloudinary";
+import { revalidatePath } from "next/cache";
 
 const productUpdateSchema = z.object({
   title: z
@@ -15,56 +17,86 @@ const productUpdateSchema = z.object({
   image: z.string().url("Invalid image URL").optional(),
 });
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+export async function getProducts(
+  page: number = 1,
+  limit: number = 10,
+  search: string = ""
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const skip = (page - 1) * limit;
 
-    if (!session || session.user?.role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const where = search
+      ? {
+          title: {
+            contains: search,
+            mode: "insensitive" as const,
+          },
+        }
+      : {};
 
-    const product = await prisma.product.findUnique({
-      where: { id: params.id },
-    });
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.product.count({ where }),
+    ]);
 
-    if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(product);
+    return {
+      success: true,
+      products,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    };
   } catch (error) {
-    console.error("Error fetching product:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error("Error fetching products:", error);
+    return { success: false, error: "Internal server error" };
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+export async function getProductById(id: string) {
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!product) {
+      return { success: false, error: "Product not found" };
+    }
+
+    return { success: true, product };
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    return { success: false, error: "Internal server error" };
+  }
+}
+
+export async function updateProductPublic(
+  id: string,
+  data: {
+    title?: string;
+    link?: string;
+    image?: string;
+  }
 ) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user?.role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const validatedData = productUpdateSchema.parse(body);
+    const validatedData = productUpdateSchema.parse(data);
 
     // Check if product exists
     const existingProduct = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingProduct) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return { success: false, error: "Product not found" };
     }
 
     // If image is being updated, delete the old one from Cloudinary
@@ -81,45 +113,42 @@ export async function PUT(
     }
 
     const updatedProduct = await prisma.product.update({
-      where: { id: params.id },
+      where: { id },
       data: validatedData,
     });
 
-    return NextResponse.json(updatedProduct);
+    revalidatePath("/products");
+
+    return { success: true, product: updatedProduct };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Validation error", details: error.errors },
-        { status: 400 }
-      );
+      return {
+        success: false,
+        error: "Validation error",
+        details: error.issues,
+      };
     }
 
     console.error("Error updating product:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return { success: false, error: "Internal server error" };
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function deleteProductPublic(id: string) {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session || session.user?.role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return { success: false, error: "Unauthorized" };
     }
 
     // Get product to delete image from Cloudinary
     const product = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return { success: false, error: "Product not found" };
     }
 
     // Delete image from Cloudinary
@@ -135,15 +164,14 @@ export async function DELETE(
 
     // Delete product from database
     await prisma.product.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
-    return NextResponse.json({ message: "Product deleted successfully" });
+    revalidatePath("/products");
+
+    return { success: true, message: "Product deleted successfully" };
   } catch (error) {
     console.error("Error deleting product:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return { success: false, error: "Internal server error" };
   }
 }

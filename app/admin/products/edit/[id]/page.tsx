@@ -17,10 +17,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Upload, X, Trash2 } from "lucide-react";
-import { uploadToCloudinary, deleteFromCloudinary, extractPublicId } from "@/lib/cloudinary";
+
 import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
+import { getProductById, updateProduct, deleteProduct as deleteProductAction } from "@/lib/actions/admin/products";
+import { uploadImage } from "@/lib/actions/upload";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,9 +82,10 @@ export default function EditProduct({ params }: { params: { id: string } }) {
 
   const fetchProduct = async () => {
     try {
-      const response = await fetch(`/api/admin/products/${params.id}`);
-      if (response.ok) {
-        const productData = await response.json();
+      const result = await getProductById(params.id);
+      
+      if (result.success) {
+        const productData = result.product;
         setProduct(productData);
         setOriginalImageUrl(productData.image);
         setImagePreview(productData.image);
@@ -92,7 +95,7 @@ export default function EditProduct({ params }: { params: { id: string } }) {
           image: productData.image,
         });
       } else {
-        toast.error("Product not found");
+        toast.error(result.error || "Product not found");
         router.push("/admin/dashboard");
       }
     } catch (error) {
@@ -106,8 +109,8 @@ export default function EditProduct({ params }: { params: { id: string } }) {
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -119,10 +122,10 @@ export default function EditProduct({ params }: { params: { id: string } }) {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Product Not Found</h2>
-          <p className="text-gray-600 mb-4">The product you're looking for doesn't exist.</p>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Product Not Found</h2>
+          <p className="text-muted-foreground mb-4">The product you're looking for doesn't exist.</p>
           <Link href="/admin/dashboard">
             <Button>Back to Dashboard</Button>
           </Link>
@@ -150,9 +153,19 @@ export default function EditProduct({ params }: { params: { id: string } }) {
     setIsUploadingImage(true);
 
     try {
-      const imageUrl = await uploadToCloudinary(file);
-      setValue("image", imageUrl);
-      toast.success("Image uploaded successfully");
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const result = await uploadImage(formData);
+
+      if (result.success) {
+        setValue("image", result.url);
+        toast.success("Image uploaded successfully");
+      } else {
+        toast.error(result.error || "Failed to upload image");
+        setImageFile(null);
+        setImagePreview(originalImageUrl);
+      }
     } catch (error) {
       console.error("Error uploading image:", error);
       toast.error("Failed to upload image");
@@ -173,32 +186,13 @@ export default function EditProduct({ params }: { params: { id: string } }) {
     setIsSubmitting(true);
 
     try {
-      // If image was changed, delete the old one from Cloudinary
-      if (data.image !== originalImageUrl && originalImageUrl) {
-        try {
-          const publicId = extractPublicId(originalImageUrl);
-          if (publicId) {
-            await deleteFromCloudinary(publicId);
-          }
-        } catch (error) {
-          console.error("Error deleting old image:", error);
-        }
-      }
+      const result = await updateProduct(params.id, data, originalImageUrl);
 
-      const response = await fetch(`/api/admin/products/${params.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
+      if (result.success) {
         toast.success("Product updated successfully!");
         router.push("/admin/dashboard");
       } else {
-        const errorData = await response.json();
-        toast.error(errorData.error || "Failed to update product");
+        toast.error(result.error || "Failed to update product");
       }
     } catch (error) {
       console.error("Error updating product:", error);
@@ -212,16 +206,13 @@ export default function EditProduct({ params }: { params: { id: string } }) {
     setIsDeleting(true);
 
     try {
-      const response = await fetch(`/api/admin/products/${params.id}`, {
-        method: "DELETE",
-      });
+      const result = await deleteProductAction(params.id);
 
-      if (response.ok) {
+      if (result.success) {
         toast.success("Product deleted successfully!");
         router.push("/admin/dashboard");
       } else {
-        const errorData = await response.json();
-        toast.error(errorData.error || "Failed to delete product");
+        toast.error(result.error || "Failed to delete product");
       }
     } catch (error) {
       console.error("Error deleting product:", error);
@@ -232,14 +223,14 @@ export default function EditProduct({ params }: { params: { id: string } }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <Link
               href="/admin/dashboard"
-              className="text-blue-600 hover:text-blue-700"
+              className="text-primary hover:text-primary/80"
             >
               ← Back to Dashboard
             </Link>
@@ -262,7 +253,7 @@ export default function EditProduct({ params }: { params: { id: string } }) {
                   <AlertDialogAction
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="bg-red-600 hover:bg-red-700"
+                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                   >
                     {isDeleting ? (
                       <>
@@ -277,10 +268,10 @@ export default function EditProduct({ params }: { params: { id: string } }) {
               </AlertDialogContent>
             </AlertDialog>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Edit Product
           </h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Update the information for "{product.title}".
           </p>
         </div>
@@ -301,10 +292,10 @@ export default function EditProduct({ params }: { params: { id: string } }) {
                   id="title"
                   {...register("title")}
                   placeholder="Enter product title"
-                  className={errors.title ? "border-red-500" : ""}
+                  className={errors.title ? "border-destructive" : ""}
                 />
                 {errors.title && (
-                  <p className="text-sm text-red-600">{errors.title.message}</p>
+                  <p className="text-sm text-destructive">{errors.title.message}</p>
                 )}
               </div>
 
@@ -315,10 +306,10 @@ export default function EditProduct({ params }: { params: { id: string } }) {
                   id="link"
                   {...register("link")}
                   placeholder="https://example.com/product"
-                  className={errors.link ? "border-red-500" : ""}
+                  className={errors.link ? "border-destructive" : ""}
                 />
                 {errors.link && (
-                  <p className="text-sm text-red-600">{errors.link.message}</p>
+                  <p className="text-sm text-destructive">{errors.link.message}</p>
                 )}
               </div>
 
@@ -331,10 +322,10 @@ export default function EditProduct({ params }: { params: { id: string } }) {
                       <Upload className="mx-auto h-12 w-12 text-gray-400" />
                       <div className="mt-4">
                         <label htmlFor="image-upload" className="cursor-pointer">
-                          <span className="mt-2 block text-sm font-medium text-gray-900">
+                          <span className="mt-2 block text-sm font-medium text-foreground">
                             Upload product image
                           </span>
-                          <span className="mt-1 block text-sm text-gray-500">
+                          <span className="mt-1 block text-sm text-muted-foreground">
                             PNG, JPG, GIF up to 5MB
                           </span>
                         </label>
@@ -389,13 +380,13 @@ export default function EditProduct({ params }: { params: { id: string } }) {
                   </div>
                 )}
                 {isUploadingImage && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Uploading image...
                   </div>
                 )}
                 {errors.image && (
-                  <p className="text-sm text-red-600">{errors.image.message}</p>
+                  <p className="text-sm text-destructive">{errors.image.message}</p>
                 )}
               </div>
             </CardContent>
@@ -406,7 +397,7 @@ export default function EditProduct({ params }: { params: { id: string } }) {
             <Button
               type="submit"
               disabled={isSubmitting || isUploadingImage}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {isSubmitting ? (
                 <>

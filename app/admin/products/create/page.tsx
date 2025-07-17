@@ -16,11 +16,13 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Upload, X } from "lucide-react";
-import { uploadToCloudinary } from "@/lib/cloudinary";
 import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
+import { createProduct } from "@/lib/actions/admin/products";
+import { uploadImage } from "@/lib/actions/upload";
 
 const productSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
@@ -49,8 +51,8 @@ export default function CreateProduct() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -79,9 +81,19 @@ export default function CreateProduct() {
     setIsUploadingImage(true);
 
     try {
-      const imageUrl = await uploadToCloudinary(file);
-      setValue("image", imageUrl);
-      toast.success("Image uploaded successfully");
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const result = await uploadImage(formData);
+
+      if (result.success) {
+        setValue("image", result.url);
+        toast.success("Image uploaded successfully");
+      } else {
+        toast.error(result.error || "Failed to upload image");
+        setImageFile(null);
+        setImagePreview("");
+      }
     } catch (error) {
       console.error("Error uploading image:", error);
       toast.error("Failed to upload image");
@@ -102,20 +114,13 @@ export default function CreateProduct() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/admin/products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const result = await createProduct(data);
 
-      if (response.ok) {
+      if (result.success) {
         toast.success("Product created successfully!");
         router.push("/admin/dashboard");
       } else {
-        const errorData = await response.json();
-        toast.error(errorData.error || "Failed to create product");
+        toast.error(result.error || "Failed to create product");
       }
     } catch (error) {
       console.error("Error creating product:", error);
@@ -126,22 +131,22 @@ export default function CreateProduct() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
             <Link
               href="/admin/dashboard"
-              className="text-blue-600 hover:text-blue-700"
+              className="text-primary hover:text-primary/80"
             >
               ← Back to Dashboard
             </Link>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Create New Product
           </h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Add a new product to your website.
           </p>
         </div>
@@ -162,10 +167,10 @@ export default function CreateProduct() {
                   id="title"
                   {...register("title")}
                   placeholder="Enter product title"
-                  className={errors.title ? "border-red-500" : ""}
+                  className={errors.title ? "border-destructive" : ""}
                 />
                 {errors.title && (
-                  <p className="text-sm text-red-600">{errors.title.message}</p>
+                  <p className="text-sm text-destructive">{errors.title.message}</p>
                 )}
               </div>
 
@@ -176,10 +181,10 @@ export default function CreateProduct() {
                   id="link"
                   {...register("link")}
                   placeholder="https://example.com/product"
-                  className={errors.link ? "border-red-500" : ""}
+                  className={errors.link ? "border-destructive" : ""}
                 />
                 {errors.link && (
-                  <p className="text-sm text-red-600">{errors.link.message}</p>
+                  <p className="text-sm text-destructive">{errors.link.message}</p>
                 )}
               </div>
 
@@ -192,10 +197,10 @@ export default function CreateProduct() {
                       <Upload className="mx-auto h-12 w-12 text-gray-400" />
                       <div className="mt-4">
                         <label htmlFor="image-upload" className="cursor-pointer">
-                          <span className="mt-2 block text-sm font-medium text-gray-900">
+                          <span className="mt-2 block text-sm font-medium text-foreground">
                             Upload product image
                           </span>
-                          <span className="mt-1 block text-sm text-gray-500">
+                          <span className="mt-1 block text-sm text-muted-foreground">
                             PNG, JPG, GIF up to 5MB
                           </span>
                         </label>
@@ -232,13 +237,13 @@ export default function CreateProduct() {
                   </div>
                 )}
                 {isUploadingImage && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Uploading image...
                   </div>
                 )}
                 {errors.image && (
-                  <p className="text-sm text-red-600">{errors.image.message}</p>
+                  <p className="text-sm text-destructive">{errors.image.message}</p>
                 )}
               </div>
             </CardContent>
@@ -249,7 +254,7 @@ export default function CreateProduct() {
             <Button
               type="submit"
               disabled={isSubmitting || isUploadingImage}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {isSubmitting ? (
                 <>

@@ -4,6 +4,7 @@ import ThemeProviderWrapper from "@/components/providers/theme-provider-wrapper"
 import NavbarWrapper from "@/components/ui/navbar-wrapper";
 import Footer from "@/components/ui/footer";
 import { Metadata } from "next";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -185,6 +186,7 @@ export default function RootLayout({
             <main className="flex-grow">{children}</main>
             <Footer />
           </div>
+          <Toaster richColors position="top-right" />
         </ThemeProviderWrapper>
       </body>
     </html>

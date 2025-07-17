@@ -1,26 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
+"use server";
+
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { sendVerificationEmail } from "@/lib/email";
 
-export async function POST(request: NextRequest) {
+export async function signupAdmin(email: string, password: string) {
   try {
-    const { email, password } = await request.json();
-
     // Validate input
     if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 }
-      );
+      return { success: false, error: "Email and password are required" };
     }
 
     // Check if email matches admin email from env
     if (email !== process.env.ADMIN_EMAIL) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      );
+      return { success: false, error: "Invalid credentials" };
     }
 
     // Check if admin already exists
@@ -29,10 +22,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingAdmin) {
-      return NextResponse.json(
-        { error: "Admin already exists" },
-        { status: 409 }
-      );
+      return { success: false, error: "Admin already exists" };
     }
 
     // Hash password
@@ -45,7 +35,7 @@ export async function POST(request: NextRequest) {
     const verificationExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Create admin
-    const admin = await prisma.admin.create({
+    await prisma.admin.create({
       data: {
         email,
         password: hashedPassword,
@@ -57,18 +47,12 @@ export async function POST(request: NextRequest) {
     // Send verification email
     await sendVerificationEmail(email, verificationCode);
 
-    return NextResponse.json(
-      {
-        message:
-          "Admin created successfully. Please check your email for verification code.",
-      },
-      { status: 201 }
-    );
+    return {
+      success: true,
+      message: "Admin created successfully. Please check your email for verification code.",
+    };
   } catch (error) {
     console.error("Signup error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return { success: false, error: "Internal server error" };
   }
 }

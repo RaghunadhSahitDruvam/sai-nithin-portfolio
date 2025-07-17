@@ -1,8 +1,8 @@
 "use client";
-
-import { useState, useEffect } from "react";
-import { signIn } from "next-auth/react";
+import React, { useState, useEffect } from "react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff, Mail, Lock, User, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
+import { checkAdminExists } from "@/lib/actions/admin/check";
+import { signupAdmin } from "@/lib/actions/admin/signup";
+import { sendVerificationCode } from "@/lib/actions/admin/send-verification";
 import { Loader2 } from "lucide-react";
 
 export default function AdminAuth() {
@@ -32,17 +36,18 @@ export default function AdminAuth() {
   const router = useRouter();
 
   useEffect(() => {
-    checkAdminExists();
+    checkAdmin();
   }, []);
 
-  const checkAdminExists = async () => {
+  const checkAdmin = async () => {
     try {
-      const response = await fetch("/api/admin/check");
-      const data = await response.json();
-      setHasAdmin(data.hasAdmin);
+      const result = await checkAdminExists();
+      setHasAdmin(result.hasAdmin);
     } catch (error) {
       console.error("Error checking admin:", error);
-      setError("Failed to check admin status");
+      toast.error("Failed to check admin status");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -53,25 +58,22 @@ export default function AdminAuth() {
     setSuccess("");
 
     try {
-      const response = await fetch("/api/admin/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
+      const result = await signupAdmin(
+          formData.email,
+          formData.password
+        );
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccess(data.message);
+      if (result.success) {
+        setSuccess(result.message || "Admin account created! Please check your email for verification code.");
         setStep("verification");
+        toast.success("Admin account created! Please check your email for verification code.");
       } else {
-        setError(data.error);
+        setError(result.error || "Signup failed");
+        toast.error(result.error || "Signup failed");
       }
     } catch (error) {
       setError("An error occurred during signup");
+      toast.error("An error occurred during signup");
     } finally {
       setIsLoading(false);
     }
@@ -84,25 +86,22 @@ export default function AdminAuth() {
     setSuccess("");
 
     try {
-      const response = await fetch("/api/admin/send-verification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
+      const result = await sendVerificationCode(
+          formData.email,
+          formData.password
+        );
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccess(data.message);
+      if (result.success) {
+        setSuccess(result.message || "Verification code sent!");
         setStep("verification");
+        toast.success("Verification code sent!");
       } else {
-        setError(data.error);
+        setError(result.error || "Failed to send verification code");
+        toast.error(result.error || "Failed to send verification code");
       }
     } catch (error) {
       setError("An error occurred");
+      toast.error("An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -123,7 +122,9 @@ export default function AdminAuth() {
 
       if (result?.error) {
         setError(result.error);
-      } else if (result?.ok) {
+        toast.error(result.error);
+      } else {
+        toast.success("Login successful!");
         router.push("/admin/dashboard");
       }
     } catch (error) {

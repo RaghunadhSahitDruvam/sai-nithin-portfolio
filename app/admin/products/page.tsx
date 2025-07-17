@@ -46,10 +46,11 @@ import {
   Package,
   ExternalLink,
 } from "lucide-react";
-import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import { getAdminProducts, deleteProduct } from "@/lib/actions/admin/products";
 
 interface Product {
   id: string;
@@ -91,8 +92,8 @@ export default function ProductsPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -105,22 +106,18 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: itemsPerPage.toString(),
-        search: searchTerm,
-        sortBy,
-        sortOrder,
-      });
+      const result = await getAdminProducts(
+        currentPage,
+        itemsPerPage,
+        searchTerm
+      );
 
-      const response = await fetch(`/api/admin/products?${params}`);
-      if (response.ok) {
-        const data: ProductsResponse = await response.json();
-        setProducts(data.products);
-        setTotal(data.total);
-        setTotalPages(data.totalPages);
+      if (result.success) {
+        setProducts(result.products);
+        setTotal(result.pagination.total);
+        setTotalPages(result.pagination.pages);
       } else {
-        toast.error("Failed to fetch products");
+        toast.error(result.error || "Failed to fetch products");
       }
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -133,16 +130,13 @@ export default function ProductsPage() {
   const handleDelete = async (productId: string) => {
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/admin/products/${productId}`, {
-        method: "DELETE",
-      });
+      const result = await deleteProduct(productId);
 
-      if (response.ok) {
+      if (result.success) {
         toast.success("Product deleted successfully!");
         fetchProducts();
       } else {
-        const errorData = await response.json();
-        toast.error(errorData.error || "Failed to delete product");
+        toast.error(result.error || "Failed to delete product");
       }
     } catch (error) {
       console.error("Error deleting product:", error);
@@ -166,29 +160,29 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <Link
               href="/admin/dashboard"
-              className="text-blue-600 hover:text-blue-700"
+              className="text-primary hover:text-primary/80"
             >
               ← Back to Dashboard
             </Link>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-foreground mb-2">
                 Products Management
               </h1>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Manage your products ({total} total)
               </p>
             </div>
             <Link href="/admin/products/create">
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Product
               </Button>
@@ -200,9 +194,7 @@ export default function ProductsPage() {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Filters</CardTitle>
-            <CardDescription>
-              Search and sort your products
-            </CardDescription>
+            <CardDescription>Search and sort your products</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -229,7 +221,9 @@ export default function ProductsPage() {
                   <SelectItem value="createdAt-asc">Oldest First</SelectItem>
                   <SelectItem value="title-asc">Title A-Z</SelectItem>
                   <SelectItem value="title-desc">Title Z-A</SelectItem>
-                  <SelectItem value="updatedAt-desc">Recently Updated</SelectItem>
+                  <SelectItem value="updatedAt-desc">
+                    Recently Updated
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -245,17 +239,17 @@ export default function ProductsPage() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Package className="h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 {searchTerm ? "No products found" : "No products yet"}
               </h3>
-              <p className="text-gray-600 text-center mb-6">
+              <p className="text-muted-foreground text-center mb-6">
                 {searchTerm
                   ? "Try adjusting your search terms"
                   : "Get started by creating your first product"}
               </p>
               {!searchTerm && (
                 <Link href="/admin/products/create">
-                  <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     <Plus className="h-4 w-4 mr-2" />
                     Add First Product
                   </Button>
@@ -278,7 +272,7 @@ export default function ProductsPage() {
                   </div>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-lg text-gray-900 line-clamp-2">
+                      <h3 className="font-semibold text-lg text-foreground line-clamp-2">
                         {product.title}
                       </h3>
                       <DropdownMenu>
@@ -306,7 +300,7 @@ export default function ProductsPage() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => setDeleteProductId(product.id)}
-                            className="text-red-600"
+                            className="text-destructive"
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
@@ -314,12 +308,13 @@ export default function ProductsPage() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                    <p className="text-sm text-gray-600 mb-3 truncate">
+                    <p className="text-sm text-muted-foreground mb-3 truncate">
                       {product.link}
                     </p>
-                    <div className="flex items-center justify-between text-xs text-gray-500">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>
-                        Created {format(new Date(product.createdAt), "MMM d, yyyy")}
+                        Created{" "}
+                        {format(new Date(product.createdAt), "MMM d, yyyy")}
                       </span>
                       {product.updatedAt !== product.createdAt && (
                         <Badge variant="secondary" className="text-xs">
@@ -342,12 +337,14 @@ export default function ProductsPage() {
                 >
                   Previous
                 </Button>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-muted-foreground">
                   Page {currentPage} of {totalPages}
                 </span>
                 <Button
                   variant="outline"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  }
                   disabled={currentPage === totalPages}
                 >
                   Next
@@ -366,7 +363,8 @@ export default function ProductsPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Product</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this product? This action cannot be undone.
+                Are you sure you want to delete this product? This action cannot
+                be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -376,7 +374,7 @@ export default function ProductsPage() {
               <AlertDialogAction
                 onClick={() => deleteProductId && handleDelete(deleteProductId)}
                 disabled={isDeleting}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               >
                 {isDeleting ? (
                   <>

@@ -1,26 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
+"use server";
+
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { sendVerificationEmail } from "@/lib/email";
 
-export async function POST(request: NextRequest) {
+export async function sendVerificationCode(email: string, password: string) {
   try {
-    const { email, password } = await request.json();
-
     // Validate input
     if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 }
-      );
+      return { success: false, error: "Email and password are required" };
     }
 
     // Check if email matches admin email from env
     if (email !== process.env.ADMIN_EMAIL) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      );
+      return { success: false, error: "Invalid credentials" };
     }
 
     // Find admin
@@ -29,19 +22,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (!admin) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      );
+      return { success: false, error: "Invalid credentials" };
     }
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, admin.password);
     if (!isValidPassword) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      );
+      return { success: false, error: "Invalid credentials" };
     }
 
     // Generate new verification code
@@ -62,15 +49,12 @@ export async function POST(request: NextRequest) {
     // Send verification email
     await sendVerificationEmail(email, verificationCode);
 
-    return NextResponse.json(
-      { message: "Verification code sent to your email" },
-      { status: 200 }
-    );
+    return {
+      success: true,
+      message: "Verification code sent to your email",
+    };
   } catch (error) {
     console.error("Send verification error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return { success: false, error: "Internal server error" };
   }
 }

@@ -1,17 +1,15 @@
 "use client";
-
-import { useState } from "react";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
-import { Input } from "./input";
-import { Label } from "./label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./select";
-import { Textarea } from "./textarea";
+import { submitContactForm } from "@/lib/actions/contact";
+
 
 export default function ContactForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -22,29 +20,22 @@ export default function ContactForm() {
 
     const formData = new FormData(e.currentTarget);
     const data = {
-      name: formData.get("name"),
-      email: formData.get("email"),
-      type: formData.get("type"),
-      message: formData.get("message"),
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      message: formData.get("message") as string,
     };
 
     try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const result = await submitContactForm(data);
 
-      if (!response.ok) {
-        throw new Error("Failed to send message");
+      if (result.success) {
+        toast.success(result.message || "Message sent successfully!");
+        (e.target as HTMLFormElement).reset();
+      } else {
+        toast.error(result.error || "Failed to send message");
       }
-
-      toast.success("Message sent successfully!");
-      (e.target as HTMLFormElement).reset();
     } catch (error) {
-      toast.error("Failed to send message. Please try again.");
+      toast.error("An error occurred while sending the message");
       console.error("Error:", error);
     } finally {
       setIsLoading(false);
@@ -76,18 +67,7 @@ export default function ContactForm() {
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="type">Type</Label>
-        <Select name="type" required>
-          <SelectTrigger>
-            <SelectValue placeholder="Select a type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Educational">Educational</SelectItem>
-            <SelectItem value="Promotional">Promotional</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+
 
       <div className="space-y-2">
         <Label htmlFor="message">Message</Label>

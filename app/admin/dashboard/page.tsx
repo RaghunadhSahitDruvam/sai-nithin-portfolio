@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "sonner";
+import { getAdminProducts, deleteProduct as deleteProductAction } from "@/lib/actions/admin/products";
 
 interface Product {
   id: string;
@@ -62,17 +64,18 @@ export default function AdminDashboard() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch("/api/admin/products?limit=6");
-      if (response.ok) {
-        const data: ProductResponse = await response.json();
-        setProducts(data.products);
-
+      const result = await getAdminProducts(1, 6);
+      if (result.success) {
+        setProducts(result.products);
         setStats({
-          total: data.pagination.total,
+          total: result.pagination?.total || 0,
         });
+      } else {
+        toast.error(result.error || "Failed to fetch products");
       }
     } catch (error) {
       console.error("Error fetching products:", error);
+      toast.error("Failed to fetch products");
     } finally {
       setLoading(false);
     }
@@ -82,25 +85,24 @@ export default function AdminDashboard() {
     if (!confirm("Are you sure you want to delete this product?")) return;
 
     try {
-      const response = await fetch(`/api/admin/products/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
+      const result = await deleteProductAction(id);
+      
+      if (result.success) {
+        toast.success("Product deleted successfully!");
         fetchProducts(); // Refresh the list
       } else {
-        alert("Failed to delete product");
+        toast.error(result.error || "Failed to delete product");
       }
     } catch (error) {
       console.error("Error deleting product:", error);
-      alert("Failed to delete product");
+      toast.error("Failed to delete product");
     }
   };
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -110,14 +112,14 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Product Management
           </h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Manage your products, add new items, and track your inventory.
           </p>
         </div>
@@ -137,9 +139,9 @@ export default function AdminDashboard() {
 
         {/* Action Bar */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Recent Products</h2>
+          <h2 className="text-xl font-semibold text-foreground">Recent Products</h2>
           <Link href="/admin/products/create">
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
               <Plus className="h-4 w-4 mr-2" />
               New Product
             </Button>
@@ -153,10 +155,10 @@ export default function AdminDashboard() {
               <div className="text-gray-400 mb-4">
                 <Package className="h-12 w-12" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 No products yet
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-muted-foreground mb-4">
                 Get started by adding your first product.
               </p>
               <Link href="/admin/products/create">
@@ -186,20 +188,20 @@ export default function AdminDashboard() {
                   <CardTitle className="text-lg line-clamp-2">
                     {product.title}
                   </CardTitle>
-                  <CardDescription className="flex items-center text-sm text-gray-500">
+                  <CardDescription className="flex items-center text-sm text-muted-foreground">
                     <ExternalLink className="h-3 w-3 mr-1" />
                     <a 
                       href={product.link} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="hover:text-blue-600 truncate"
+                      className="hover:text-primary truncate"
                     >
                       {product.link}
                     </a>
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                     <div className="flex items-center">
                       <Calendar className="h-3 w-3 mr-1" />
                       {new Date(product.createdAt).toLocaleDateString()}
@@ -220,7 +222,7 @@ export default function AdminDashboard() {
                       variant="outline"
                       size="sm"
                       onClick={() => deleteProduct(product.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
