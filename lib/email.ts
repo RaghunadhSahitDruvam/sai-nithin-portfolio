@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import { ReactElement } from "react";
 import { render } from "@react-email/render";
 import VerificationEmail from "@/emails/verification-email";
+import PasswordResetEmail from "@/emails/password-reset-email";
 
 // Get email config from env variables
 const smtpHost = process.env.EMAIL_SERVER_HOST;
@@ -94,5 +95,13 @@ export async function sendVerificationEmail(
     to: email,
     subject: "Admin Verification Code",
     react: VerificationEmail({ verificationCode }),
+  });
+}
+
+export async function sendPasswordResetEmail(email: string, resetCode: string) {
+  return await sendEmail({
+    to: email,
+    subject: "Admin Password Reset Code",
+    react: PasswordResetEmail({ resetCode }),
   });
 }

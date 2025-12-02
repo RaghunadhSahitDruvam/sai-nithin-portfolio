@@ -43,7 +43,7 @@ export default function AdminAuth() {
   const checkAdmin = async () => {
     try {
       const result = await checkAdminExists();
-      setHasAdmin(result.hasAdmin);
+      setHasAdmin(result.hasAdmin || false);
     } catch (error) {
       console.error("Error checking admin:", error);
       toast.error("Failed to check admin status");
@@ -231,6 +231,15 @@ export default function AdminAuth() {
                   "Create Admin Account"
                 )}
               </Button>
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  className="text-sm text-blue-600 hover:text-blue-500 underline"
+                  onClick={() => router.push("/admin/auth/forgot-password")}
+                >
+                  Forgot your password?
+                </button>
+              </div>
             </form>
           ) : (
             <form onSubmit={handleVerification} className="space-y-4">
