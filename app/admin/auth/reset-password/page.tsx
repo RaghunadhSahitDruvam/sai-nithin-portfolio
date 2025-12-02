@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import {
 } from "@/lib/actions/admin/forgot-password";
 import { Loader2 } from "lucide-react";
 
-export default function ResetPassword() {
+function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -248,5 +248,30 @@ export default function ResetPassword() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function ResetPassword() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-center">
+                Loading...
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
