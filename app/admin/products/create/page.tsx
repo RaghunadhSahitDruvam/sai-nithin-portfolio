@@ -27,7 +27,7 @@ import { uploadImage } from "@/lib/actions/upload";
 const productSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
   link: z.string().url("Invalid URL format"),
-  image: z.string().url("Image is required"),
+  image: z.string().url("Invalid image URL").optional().or(z.literal("")),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -170,7 +170,9 @@ export default function CreateProduct() {
                   className={errors.title ? "border-destructive" : ""}
                 />
                 {errors.title && (
-                  <p className="text-sm text-destructive">{errors.title.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.title.message}
+                  </p>
                 )}
               </div>
 
@@ -184,19 +186,24 @@ export default function CreateProduct() {
                   className={errors.link ? "border-destructive" : ""}
                 />
                 {errors.link && (
-                  <p className="text-sm text-destructive">{errors.link.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.link.message}
+                  </p>
                 )}
               </div>
 
               {/* Image Upload */}
               <div className="space-y-2">
-                <Label>Product Image *</Label>
+                <Label>Product Image (Optional)</Label>
                 {!imagePreview ? (
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
                     <div className="text-center">
                       <Upload className="mx-auto h-12 w-12 text-gray-400" />
                       <div className="mt-4">
-                        <label htmlFor="image-upload" className="cursor-pointer">
+                        <label
+                          htmlFor="image-upload"
+                          className="cursor-pointer"
+                        >
                           <span className="mt-2 block text-sm font-medium text-foreground">
                             Upload product image
                           </span>
@@ -243,7 +250,9 @@ export default function CreateProduct() {
                   </div>
                 )}
                 {errors.image && (
-                  <p className="text-sm text-destructive">{errors.image.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.image.message}
+                  </p>
                 )}
               </div>
             </CardContent>

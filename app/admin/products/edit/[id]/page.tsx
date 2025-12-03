@@ -21,7 +21,11 @@ import { Loader2, Upload, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
-import { getProductById, updateProduct, deleteProduct as deleteProductAction } from "@/lib/actions/admin/products";
+import {
+  getProductById,
+  updateProduct,
+  deleteProduct as deleteProductAction,
+} from "@/lib/actions/admin/products";
 import { uploadImage } from "@/lib/actions/upload";
 import {
   AlertDialog,
@@ -38,7 +42,7 @@ import {
 const productSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
   link: z.string().url("Invalid URL format"),
-  image: z.string().url("Image is required"),
+  image: z.string().url("Invalid image URL").optional().or(z.literal("")),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -47,9 +51,9 @@ interface Product {
   id: string;
   title: string;
   link: string;
-  image: string;
-  createdAt: string;
-  updatedAt: string;
+  image: string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 export default function EditProduct({ params }: { params: { id: string } }) {
@@ -83,16 +87,16 @@ export default function EditProduct({ params }: { params: { id: string } }) {
   const fetchProduct = async () => {
     try {
       const result = await getProductById(params.id);
-      
-      if (result.success) {
+
+      if (result.success && result.product) {
         const productData = result.product;
         setProduct(productData);
-        setOriginalImageUrl(productData.image);
-        setImagePreview(productData.image);
+        setOriginalImageUrl(productData.image || "");
+        setImagePreview(productData.image || "");
         reset({
           title: productData.title,
           link: productData.link,
-          image: productData.image,
+          image: productData.image || "",
         });
       } else {
         toast.error(result.error || "Product not found");
@@ -124,8 +128,12 @@ export default function EditProduct({ params }: { params: { id: string } }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-2">Product Not Found</h2>
-          <p className="text-muted-foreground mb-4">The product you're looking for doesn't exist.</p>
+          <h2 className="text-2xl font-bold text-foreground mb-2">
+            Product Not Found
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            The product you're looking for doesn't exist.
+          </p>
           <Link href="/admin/dashboard">
             <Button>Back to Dashboard</Button>
           </Link>
@@ -245,7 +253,8 @@ export default function EditProduct({ params }: { params: { id: string } }) {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Product</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to delete this product? This action cannot be undone.
+                    Are you sure you want to delete this product? This action
+                    cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -295,7 +304,9 @@ export default function EditProduct({ params }: { params: { id: string } }) {
                   className={errors.title ? "border-destructive" : ""}
                 />
                 {errors.title && (
-                  <p className="text-sm text-destructive">{errors.title.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.title.message}
+                  </p>
                 )}
               </div>
 
@@ -309,19 +320,24 @@ export default function EditProduct({ params }: { params: { id: string } }) {
                   className={errors.link ? "border-destructive" : ""}
                 />
                 {errors.link && (
-                  <p className="text-sm text-destructive">{errors.link.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.link.message}
+                  </p>
                 )}
               </div>
 
               {/* Image Upload */}
               <div className="space-y-2">
-                <Label>Product Image *</Label>
+                <Label>Product Image (Optional)</Label>
                 {!imagePreview ? (
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
                     <div className="text-center">
                       <Upload className="mx-auto h-12 w-12 text-gray-400" />
                       <div className="mt-4">
-                        <label htmlFor="image-upload" className="cursor-pointer">
+                        <label
+                          htmlFor="image-upload"
+                          className="cursor-pointer"
+                        >
                           <span className="mt-2 block text-sm font-medium text-foreground">
                             Upload product image
                           </span>
@@ -352,7 +368,12 @@ export default function EditProduct({ params }: { params: { id: string } }) {
                     </div>
                     <div className="flex gap-2">
                       <label htmlFor="image-upload" className="cursor-pointer">
-                        <Button type="button" variant="outline" size="sm" asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          asChild
+                        >
                           <span>
                             <Upload className="h-4 w-4 mr-2" />
                             Change Image
@@ -386,7 +407,9 @@ export default function EditProduct({ params }: { params: { id: string } }) {
                   </div>
                 )}
                 {errors.image && (
-                  <p className="text-sm text-destructive">{errors.image.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.image.message}
+                  </p>
                 )}
               </div>
             </CardContent>

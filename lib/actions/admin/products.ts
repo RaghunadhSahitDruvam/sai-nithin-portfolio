@@ -10,7 +10,7 @@ import { revalidatePath } from "next/cache";
 const productSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
   link: z.string().url("Invalid URL format"),
-  image: z.string().url("Invalid image URL"),
+  image: z.string().url("Invalid image URL").optional().or(z.literal("")),
 });
 
 const productUpdateSchema = z.object({
@@ -20,7 +20,7 @@ const productUpdateSchema = z.object({
     .max(200, "Title too long")
     .optional(),
   link: z.string().url("Invalid URL format").optional(),
-  image: z.string().url("Invalid image URL").optional(),
+  image: z.string().url("Invalid image URL").optional().or(z.literal("")),
 });
 
 export async function getAdminProducts(
@@ -30,7 +30,7 @@ export async function getAdminProducts(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || session.user?.role !== "admin") {
       return { success: false, error: "Unauthorized" };
     }
@@ -75,11 +75,11 @@ export async function getAdminProducts(
 export async function createProduct(data: {
   title: string;
   link: string;
-  image: string;
+  image?: string;
 }) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || session.user?.role !== "admin") {
       return { success: false, error: "Unauthorized" };
     }
@@ -161,7 +161,11 @@ export async function updateProduct(
 
     // If image is being updated, delete the old one from Cloudinary
     const imageToDelete = originalImageUrl || existingProduct.image;
-    if (validatedData.image && validatedData.image !== imageToDelete) {
+    if (
+      validatedData.image &&
+      validatedData.image !== imageToDelete &&
+      imageToDelete
+    ) {
       try {
         const publicId = extractPublicId(imageToDelete);
         if (publicId) {
@@ -214,15 +218,17 @@ export async function deleteProduct(id: string) {
       return { success: false, error: "Product not found" };
     }
 
-    // Delete image from Cloudinary
-    try {
-      const publicId = extractPublicId(product.image);
-      if (publicId) {
-        await deleteFromCloudinary(publicId);
+    // Delete image from Cloudinary if it exists
+    if (product.image) {
+      try {
+        const publicId = extractPublicId(product.image);
+        if (publicId) {
+          await deleteFromCloudinary(publicId);
+        }
+      } catch (error) {
+        console.error("Error deleting image from Cloudinary:", error);
+        // Continue with product deletion even if image deletion fails
       }
-    } catch (error) {
-      console.error("Error deleting image from Cloudinary:", error);
-      // Continue with product deletion even if image deletion fails
     }
 
     // Delete product from database
