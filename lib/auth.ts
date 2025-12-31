@@ -39,28 +39,44 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        // Check verification code if provided
-        if (credentials.verificationCode) {
-          if (
-            !admin.verificationCode ||
-            admin.verificationCode !== credentials.verificationCode ||
-            !admin.verificationExpiry ||
-            admin.verificationExpiry < new Date()
-          ) {
-            throw new Error("Invalid or expired verification code");
-          }
+        // Get security settings to check if 2FA is enabled
+        const securitySettings = await prisma.securitySettings.findFirst();
+        const twoFactorEnabled = securitySettings?.twoFactorEnabled ?? true;
 
-          // Mark as verified and clear verification code
-          await prisma.admin.update({
-            where: { id: admin.id },
-            data: {
-              isVerified: true,
-              verificationCode: null,
-              verificationExpiry: null,
-            },
-          });
-        } else if (!admin.isVerified) {
-          throw new Error("Email verification required");
+        // Check verification code if 2FA is enabled
+        if (twoFactorEnabled) {
+          if (credentials.verificationCode) {
+            if (
+              !admin.verificationCode ||
+              admin.verificationCode !== credentials.verificationCode ||
+              !admin.verificationExpiry ||
+              admin.verificationExpiry < new Date()
+            ) {
+              throw new Error("Invalid or expired verification code");
+            }
+
+            // Mark as verified and clear verification code
+            await prisma.admin.update({
+              where: { id: admin.id },
+              data: {
+                isVerified: true,
+                verificationCode: null,
+                verificationExpiry: null,
+              },
+            });
+          } else if (!admin.isVerified) {
+            throw new Error("Email verification required");
+          }
+        } else {
+          // 2FA is disabled, mark as verified if not already
+          if (!admin.isVerified) {
+            await prisma.admin.update({
+              where: { id: admin.id },
+              data: {
+                isVerified: true,
+              },
+            });
+          }
         }
 
         return {
@@ -83,12 +99,12 @@ export const authOptions: NextAuthOptions = {
         token.role = "admin";
         token.email = user.email;
       }
-      
+
       // Handle session update trigger (when update() is called)
       if (trigger === "update" && session?.email) {
         token.email = session.email;
       }
-      
+
       return token;
     },
     async session({ session, token }) {

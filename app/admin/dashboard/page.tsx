@@ -13,6 +13,8 @@ import {
   ExternalLink,
   LogOut,
   Settings,
+  Search,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,7 +70,7 @@ export default function AdminDashboard() {
     try {
       const result = await getAdminProducts(1, 6);
       if (result.success) {
-        setProducts(result.products);
+        setProducts(result.products || []);
         setStats({
           total: result.pagination?.total || 0,
         });
@@ -88,7 +90,7 @@ export default function AdminDashboard() {
 
     try {
       const result = await deleteProductAction(id);
-      
+
       if (result.success) {
         toast.success("Product deleted successfully!");
         fetchProducts(); // Refresh the list
@@ -128,14 +130,26 @@ export default function AdminDashboard() {
               </p>
             </div>
             <div className="flex gap-2">
+              <Link href="/admin/seo-settings">
+                <Button variant="outline" size="sm">
+                  <Search className="h-4 w-4 mr-2" />
+                  SEO Settings
+                </Button>
+              </Link>
+              <Link href="/admin/security-settings">
+                <Button variant="outline" size="sm">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Security
+                </Button>
+              </Link>
               <Link href="/admin/account-settings">
                 <Button variant="outline" size="sm">
                   <Settings className="h-4 w-4 mr-2" />
                   Account Settings
                 </Button>
               </Link>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => {
                   if (confirm("Are you sure you want to logout?")) {
@@ -217,9 +231,9 @@ export default function AdminDashboard() {
                   </CardTitle>
                   <CardDescription className="flex items-center text-sm text-muted-foreground">
                     <ExternalLink className="h-3 w-3 mr-1" />
-                    <a 
-                      href={product.link} 
-                      target="_blank" 
+                    <a
+                      href={product.link}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="hover:text-primary truncate"
                     >

@@ -23,6 +23,43 @@ model Admin {
   @@map("admins")
 }
 
+model PageSEO {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  pageName        String   @unique // e.g., "home", "about", "contact"
+  pageTitle       String
+  metaTitle       String
+  metaDescription String
+  metaKeywords    String?
+  ogTitle         String?
+  ogDescription   String?
+  ogImage         String?
+  ogImagePublicId String?
+  twitterCard     String?  @default("summary_large_image")
+  twitterTitle    String?
+  twitterDescription String?
+  twitterImage    String?
+  canonicalUrl    String?
+  robots          String?  @default("index, follow")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("page_seo")
+}
+
+model SecuritySettings {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  twoFactorEnabled      Boolean  @default(true)
+  sessionTimeout        Int      @default(3600) // in seconds
+  maxLoginAttempts      Int      @default(5)
+  lockoutDuration       Int      @default(900) // in seconds
+  passwordExpiryDays    Int      @default(90)
+  requireStrongPassword Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("security_settings")
+}
+
 model Product {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String

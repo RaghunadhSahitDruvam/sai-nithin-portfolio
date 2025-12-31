@@ -6,55 +6,11 @@ import ContactFormWrapper from "@/components/ui/contact-form-wrapper";
 import { Toaster } from "sonner";
 import WhatIDoSection from "@/components/ui/what-i-do-section";
 import ViralVideosSection from "@/components/ui/viral-videos-section";
-import { Metadata } from "next";
+import { getPageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
-  title:
-    "Sai Nithin K - Telugu Tech YouTuber & Content Creator | sainithintech",
-  description:
-    "Welcome to Sai Nithin K's digital hub. Explore the journey of a prominent Telugu tech content creator with 856K+ YouTube subscribers. Discover tech reviews, tutorials, and educational courses on digital content creation.",
-  keywords: [
-    "Sai Nithin K",
-    "sainithintech",
-    "Telugu tech YouTuber",
-    "Tech content creator",
-    "YouTube tech channel",
-    "Telugu tech reviews",
-    "Tech tutorials Telugu",
-    "Gadget reviews",
-    "Tech news Telugu",
-    "Content creation courses",
-    "Digital marketing Telugu",
-    "Online earning tutorials",
-  ],
-  openGraph: {
-    title:
-      "Sai Nithin K - Telugu Tech YouTuber & Content Creator | sainithintech",
-    description:
-      "Welcome to Sai Nithin K's digital hub. Explore the journey of a prominent Telugu tech content creator with 856K+ YouTube subscribers.",
-    url: "https://sainithintech.com",
-    type: "website",
-    images: [
-      {
-        url: "/profile.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Sai Nithin K - Telugu Tech YouTuber & Content Creator",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title:
-      "Sai Nithin K - Telugu Tech YouTuber & Content Creator | sainithintech",
-    description:
-      "Welcome to Sai Nithin K's digital hub. Explore the journey of a prominent Telugu tech content creator with 856K+ YouTube subscribers.",
-    images: ["/profile.jpg"],
-  },
-  alternates: {
-    canonical: "https://sainithintech.com",
-  },
-};
+export async function generateMetadata() {
+  return await getPageMetadata("home");
+}
 
 export default function Home() {
   const websiteStructuredData = {
